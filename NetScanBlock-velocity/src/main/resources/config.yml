@@ -1,2 +1,3 @@
+log-denied-connections: true
 allowed-domains:
   - "violetmc.net"

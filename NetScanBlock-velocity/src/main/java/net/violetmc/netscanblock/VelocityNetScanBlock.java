@@ -1,4 +1,5 @@
 package net.violetmc.netscanblock;
+
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.Subscribe;
@@ -14,9 +15,11 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Plugin(
         id = "netscanblock",
@@ -24,8 +27,9 @@ import java.util.Objects;
         version = "1.0",
         authors = {"MasterDash5"}
 )
-public class VelocityNetScanBlock {
+public final class VelocityNetScanBlock {
 
+    private final Logger logger;
     private final List<String> allowed;
 
     @Inject
@@ -35,13 +39,21 @@ public class VelocityNetScanBlock {
                 Objects.requireNonNull(getClass().getResourceAsStream("/config.yml"))
         );
         config.save();
-        allowed = config.getStringList("allowed-domains");
+
+        this.logger = config.getBoolean("log-denied-connections") ? logger : null;
+        this.allowed = config.getStringList("allowed-domains");
     }
 
     @Subscribe
     public void onPreLogin(PreLoginEvent event) {
-        if (isDomainDisallowed(event.getConnection()))
+        InboundConnection connection = event.getConnection();
+
+        if (isDomainDisallowed(connection)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Connection Refused")));
+
+            if (logger != null)
+                logger.info("Denied connection for {} ({})", event.getUsername(), connection.getRemoteAddress().getHostName());
+        }
     }
 
     @Subscribe
@@ -51,9 +63,18 @@ public class VelocityNetScanBlock {
     }
 
     private boolean isDomainDisallowed(InboundConnection connection) {
-        return connection.getVirtualHost().filter(
-                address -> allowed.contains(address.getHostName().toLowerCase())
-        ).isEmpty();
+        Optional<InetSocketAddress> address = connection.getVirtualHost();
+
+        if (address.isEmpty())
+            return true;
+
+        String hostname = address.get().getHostName().toLowerCase();
+
+        for (String domain : allowed)
+            if (hostname.endsWith(domain))
+                return false;
+
+        return true;
     }
 
 }
