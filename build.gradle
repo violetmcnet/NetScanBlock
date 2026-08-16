@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group = 'net.violetmc.netscanblock'
+version = '1.0'
+
+subprojects {
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'papermc'
+            url = 'https://repo.papermc.io/repository/maven-public/'
+        }
+    }
+
+    java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}

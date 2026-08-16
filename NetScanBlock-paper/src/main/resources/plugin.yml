@@ -1,0 +1,5 @@
+name: NetScanBlock
+version: 1.0
+author: MasterDash5
+main: net.violetmc.netscanblock.PaperNetScanBlock
+api-version: 1.20.6

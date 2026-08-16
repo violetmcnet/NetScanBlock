@@ -1,0 +1,4 @@
+rootProject.name = 'NetScanBlock'
+
+include rootProject.name + '-paper'
+include rootProject.name + '-velocity'
